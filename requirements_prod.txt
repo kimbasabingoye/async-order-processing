@@ -1,0 +1,11 @@
+aio-pika
+celery
+fastapi
+gunicorn
+ujson
+httpx
+loguru
+pymongo
+pydantic-settings
+python-dotenv
+uvicorn

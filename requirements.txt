@@ -1,0 +1,15 @@
+aio-pika
+celery
+fastapi
+httpx
+loguru
+pymongo
+pydantic
+pydantic-settings
+python-dotenv
+uvicorn
+
+# dev
+flower
+pytest
+pytest-asyncio
