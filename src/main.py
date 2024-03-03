@@ -22,6 +22,8 @@ from fastapi.staticfiles import StaticFiles
 # local modules
 from .config.setup import config
 from .api import process_routes, health_route
+from .api.customers.router import ROUTER as customers_router
+from .api.employees.router import ROUTER as employees_router
 from .tools.custom_logging import create_unified_logger
 from .api.documentation import (license_info, tags_metadata, description)
 
@@ -57,6 +59,8 @@ class Service(FastAPI):
         # the order is related to the documentation order).
         self.include_router(process_routes.ROUTER)
         self.include_router(health_route.ROUTER)
+        self.include_router(customers_router)
+        self.include_router(employees_router)
 
         # Unify logging within the imported package's closure.
         self.logger = create_unified_logger()

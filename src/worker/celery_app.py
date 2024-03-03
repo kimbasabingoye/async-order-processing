@@ -108,11 +108,11 @@ def response_handler(task: callable, status: str, retval: Any,
     :param _: Not used (needed for correct signature).
     :param __: Not used (needed for correct signature).
     """
-    payload = args[0]
+    #payload = args[0]
 
     # Check if any more work needs to be done here.
-    if not payload.get('responseUrl', payload.get('responseQueue')):
-        return
+    #if not payload.get('responseUrl', payload.get('responseQueue')):
+    #    return
 
     if status == 'SUCCESS':
         result = retval
@@ -123,10 +123,12 @@ def response_handler(task: callable, status: str, retval: Any,
 
     response = {'job_id': task_id, 'status': status, 'result': result}
 
+    """
     if 'responseUrl' in payload:
         asyncio.run(send_restful_response(payload['responseUrl'], response))
 
     if 'responseQueue' in payload:
         asyncio.run(send_rabbit_response(payload['responseQueue'], response))
+    """
 
-
+    asyncio.run(send_rabbit_response(queue_name='CallerService', result=response))

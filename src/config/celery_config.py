@@ -26,7 +26,8 @@ result_extended = True
 
 # List of modules to import when the Celery
 # worker starts (improves start time).
-imports = ('src.worker.tasks',)
+imports = ('src.worker.tasks', 'src.worker.customers_tasks',
+           'src.worker.employees_tasks')
 
 # Normalize logging format.
 worker_log_format = '%(asctime)s | %(levelname)-8s | %(processName)s | %(message)s'
@@ -44,8 +45,8 @@ task_acks_late = True
 # and will increase the performance.
 worker_prefetch_multiplier = 10
 
-## task will be killed after 60 seconds
+# task will be killed after 60 seconds
 # task_time_limit = 60
 
-## task will raise exception SoftTimeLimitExceeded after 50 seconds.
+# task will raise exception SoftTimeLimitExceeded after 50 seconds.
 # task_soft_time_limit = 50
