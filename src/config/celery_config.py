@@ -27,7 +27,7 @@ result_extended = True
 # List of modules to import when the Celery
 # worker starts (improves start time).
 imports = ('src.worker.tasks', 'src.worker.customers_tasks',
-           'src.worker.employees_tasks')
+           'src.worker.employees_tasks', 'src.worker.orders_tasks')
 
 # Normalize logging format.
 worker_log_format = '%(asctime)s | %(levelname)-8s | %(processName)s | %(message)s'
