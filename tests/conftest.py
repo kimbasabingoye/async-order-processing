@@ -9,7 +9,7 @@ VERSION INFO::
     $Date: 2023-07-15 12:48:23
      $Rev: 19
 """
-
+"""
 # Third party modules
 import pytest
 from starlette.testclient import TestClient
@@ -22,7 +22,7 @@ from ..src.main import app
 #
 @pytest.fixture(scope="module")
 def anyio_backend():
-    """ Module fixture. """
+    "" Module fixture. ""
 
     return 'asyncio'
 
@@ -31,7 +31,8 @@ def anyio_backend():
 #
 @pytest.fixture(scope="module")
 def test_app():
-    """ Module fixture. """
+    "" Module fixture. ""
 
     with TestClient(app) as test_client:
         yield test_client
+"""

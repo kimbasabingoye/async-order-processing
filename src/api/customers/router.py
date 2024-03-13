@@ -1,100 +1,77 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright: Wilde Consulting
-  License: Apache 2.0
 
-VERSION INFO::
-    $Repo: fastapi_messaging
-  $Author: Anders Wiklund
-    $Date: 2023-03-30 12:13:57
-     $Rev: 47
-"""
-
-# BUILTIN modules
 from typing import List
 
-# Third party modules
-from pydantic import UUID4
-from fastapi import HTTPException, Depends, APIRouter
+from fastapi import APIRouter, HTTPException, Depends
 from kombu.exceptions import OperationalError
-from fastapi.responses import Response
-from fastapi import APIRouter, status
 from loguru import logger
 
-# Local modules
-from .customer_api_adapter import CustomersApi
-# from .documentation import customer_id_documentation
-from .customer_data_adapter import CustomersRepository
-from .models import (CustomerCreateModel, CustomerModel, CustomersCollection,
-                     NotFoundError, FailedUpdateError, ConnectError)
+from .models import CustomerCreateModel
 from ..models import ProcessResponseModel, UnknownError
 from ...tools.security import validate_authentication
 from ...worker.customers_tasks import create_customer_processor, read_customer_processor, list_customers_processor
 
-# Constants
-ROUTER = APIRouter(prefix=f"/v1/customers", tags=[f"Customers"])
-""" Customer API endpoint router. """
+
+# Create API router
+router = APIRouter(prefix="/v1/customers", tags=["Customers"])
 
 
-# ---------------------------------------------------------
-#
-@ROUTER.post('',
-             status_code=202,
-             response_model=ProcessResponseModel,
-             responses={500: {"model": UnknownError}},
-             dependencies=[Depends(validate_authentication)])
+# Endpoint for creating a customer
+@router.post(
+    "",
+    status_code=202,
+    response_model=ProcessResponseModel,
+    responses={500: {"model": UnknownError}},
+    dependencies=[Depends(validate_authentication)]
+)
 async def create_customer(payload: CustomerCreateModel) -> ProcessResponseModel:
-    """**Trigger Celery task processing of specified payload.**"""
-    payload_json = payload.model_dump()
     try:
-        # Add payload message to Celery for processing.
-        result = create_customer_processor.delay(payload_json)
-        logger.debug(f'Added task [{result.id}] to Celery for processing')
+        # Trigger Celery task processing of the payload
+        result = create_customer_processor.delay(payload.model_dump())
+        logger.debug(f"Added task [{result.id}] to Celery for processing")
         return ProcessResponseModel(status=result.state, id=result.id)
-
-    except OperationalError as why:
-        errmsg = f'Celery task initialization failed: {why}'
+    except OperationalError as e:
+        errmsg = f"Celery task initialization failed: {e}"
         logger.error(errmsg)
         raise HTTPException(status_code=500, detail=errmsg)
 
 
-# ---------------------------------------------------------
-#
-@ROUTER.get('{/customer_id}',
-            status_code=202,
-            response_model=ProcessResponseModel,
-            responses={500: {"model": UnknownError}},
-            dependencies=[Depends(validate_authentication)])
+# Endpoint for retrieving a customer
+@router.get(
+    "{/customer_id}",
+    status_code=202,
+    response_model=ProcessResponseModel,
+    responses={500: {"model": UnknownError}},
+    dependencies=[Depends(validate_authentication)]
+)
 async def get_customer(customer_id: str) -> ProcessResponseModel:
-    """**Trigger Celery task processing of specified payload.**"""
     try:
-        # Add payload message to Celery for processing.
+        # Trigger Celery task processing to retrieve the customer
         result = read_customer_processor.delay(customer_id)
-        logger.debug(f'Added task [{result.id}] to Celery for processing')
+        logger.debug(f"Added task [{result.id}] to Celery for processing")
         return ProcessResponseModel(status=result.state, id=result.id)
-
-    except OperationalError as why:
-        errmsg = f'Celery task initialization failed: {why}'
+    except OperationalError as e:
+        errmsg = f"Celery task initialization failed: {e}"
         logger.error(errmsg)
         raise HTTPException(status_code=500, detail=errmsg)
 
 
-# ---------------------------------------------------------
-#
-@ROUTER.get('',
-            status_code=202,
-            response_model=ProcessResponseModel,
-            responses={500: {"model": UnknownError}},
-            dependencies=[Depends(validate_authentication)])
-async def list_customers() -> ProcessResponseModel:
-    """**Trigger Celery task processing of specified payload.**"""
-    try:
-        # Add payload message to Celery for processing.
-        result = list_customers_processor.delay()
-        logger.debug(f'Added task [{result.id}] to Celery for processing')
-        return ProcessResponseModel(status=result.state, id=result.id)
 
-    except OperationalError as why:
-        errmsg = f'Celery task initialization failed: {why}'
+# Endpoint for listing all customers
+@router.get(
+    "",
+    status_code=202,
+    response_model=ProcessResponseModel,
+    responses={500: {"model": UnknownError}},
+    dependencies=[Depends(validate_authentication)]
+)
+async def list_customers() -> ProcessResponseModel:
+    try:
+        # Trigger Celery task processing to list all customers
+        result = list_customers_processor.delay()
+        logger.debug(f"Added task [{result.id}] to Celery for processing")
+        return ProcessResponseModel(status=result.state, id=result.id)
+    except OperationalError as e:
+        errmsg = f"Celery task initialization failed: {e}"
         logger.error(errmsg)
         raise HTTPException(status_code=500, detail=errmsg)

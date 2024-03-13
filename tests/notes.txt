@@ -1,0 +1,11 @@
+Test 1:
+- create customer
+- create employee
+- create an order
+- an employee validate order
+- get the order quotation
+- validate quotation
+- get the scheduled realisation
+- start realisation
+- complete realisation
+- get the order

@@ -1,85 +1,27 @@
-
-from datetime import datetime
-import json
-
-# Third party modules
+from typing import List
 from fastapi import HTTPException
-from pydantic import UUID4
-
-# Local modules
+from pydantic import BaseModel
 from .employee_data_adapter import EmployeesRepository
-from .models import EmployeesCollection, EmployeeCreateModel, EmployeeModel
+from .models import EmployeeModel, EmployeeCreateModel
+from ..base_api_adapter import BaseAPIAdapter
 
 
-# ------------------------------------------------------------------------
-#
-class EmployeesApi:
+class EmployeesAPIAdapter(BaseAPIAdapter):
     """
-    This class implemnts the Web API layer adapter.
+    API adapter for handling customer-related operations.
     """
 
-    # ---------------------------------------------------------
-    #
     def __init__(self, repository: EmployeesRepository):
-        """ The class initializer.
+        super().__init__(repository)
 
-        :param repository: Data layer handler object
-        """
-        self.repo = repository
+    def get_customer(self, customer_id: str) -> EmployeeModel:
+        """Get a customer by ID."""
+        return self.get_obj(customer_id)
 
-    # ---------------------------------------------------------
-    #
-    def _employee_of(self, employee_id: UUID4) -> EmployeeModel:
-        """ Return specified employee.
+    def create_customer(self, payload: EmployeeCreateModel) -> EmployeeModel:
+        """Create a new customer."""
+        return self.create_obj(payload)
 
-        :param employee_id: employee id for employee to find.
-        :return: Found employee object.
-        :raise HTTPException [404]: when employee not found in DB.
-        """
-        db_employee = self.repo.read(employee_id)
-
-        if not db_employee:
-            errmsg = f"{employee_id} not found in DB api_db.orders"
-            raise HTTPException(status_code=404, detail=errmsg)
-
-        return db_employee
-
-    # ---------------------------------------------------------
-    #
-
-    def get_employee(self, employee_id: str) -> EmployeeModel:
-        """ Return specified employee. 
-
-        :param employee_id: employee id for employee to find.
-        :return: Found employee object.
-        :raise HTTPException [404]: when employee not found in DB api_db.employees.
-        """
-        db_employee = self._employee_of(employee_id)
-
-        return db_employee
-
-    # ---------------------------------------------------------
-    #
-
-    def create_employee(self, payload: EmployeeCreateModel) -> EmployeeModel:
-        """ Create a new employee in DB.
-
-        :param payload: employee payload.
-        :return: Created employee object.
-        :raise HTTPException [400]: when create employee in DB api_db.employees failed.
-        """
-
-        return self.repo.create(payload=payload)
-
-    # ---------------------------------------------------------
-    #
-
-    def list_employees(self) -> EmployeesCollection:
-        """ list all existing employees in DB api_db.employees.
-
-        :return: list of found employees
-        """
-
-        db_employees = self.repo.read_all()
-
-        return db_employees
+    def list_customers(self) -> List[EmployeeModel]:
+        """List all customers."""
+        return self.read_all_obj()

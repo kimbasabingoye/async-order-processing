@@ -22,7 +22,7 @@ from fastapi import APIRouter, status
 from loguru import logger
 
 # Local modules
-from .employee_api_adapter import EmployeesApi
+from .employee_api_adapter import EmployeesAPIAdapter
 # from .documentation import employee_id_documentation
 from .employee_data_adapter import EmployeesRepository
 from .models import (EmployeeCreateModel, EmployeeModel, EmployeesCollection,

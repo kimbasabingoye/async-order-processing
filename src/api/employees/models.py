@@ -8,34 +8,31 @@ from typing import List
 # Local program modules
 from ..database import PyObjectId
 
-# ---------------------------------------------------------
-#
-class EmployeeCreateModel(BaseModel):
-    """ Representation of an data required when creating employee in the system. """
+
+class EmployeeBase(BaseModel):
+    """Base model for Employee data."""
     first_name: str
     last_name: str
     email: EmailStr
 
 
-# ---------------------------------------------------------
-#
-class EmployeeModel(EmployeeCreateModel):
-    """ Representation of an Employee in the system. """
+class EmployeeCreateModel(EmployeeBase):
+    """Model for creating a new Employee."""
+    pass
+
+
+class EmployeeModel(EmployeeBase):
+    """Model for representing a Employee."""
     id: PyObjectId
 
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True)
+    class Config:
+        """Configuration for the model."""
+        allow_population_by_field_name = True
 
 
 class EmployeesCollection(BaseModel):
-    """
-    A container holding a list of `EmployeeModel` instances.
-
-    This exists because providing a top-level array in a JSON response can be a [vulnerability](https://haacked.com/archive/2009/06/25/json-hijacking.aspx/)
-    """
-
-    employees: List[EmployeeModel]
+    """Model for representing a collection of Employees."""
+    Employees: List[EmployeeModel]
 
 
 # -----------------------------------------------------------------------------
