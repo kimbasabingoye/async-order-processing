@@ -3,6 +3,7 @@ import uuid
 from typing import Callable, List
 from bson import ObjectId
 from fastapi import HTTPException
+from enum import Enum
 
 # Third party modules
 from pymongo import MongoClient
@@ -127,12 +128,31 @@ class CustomersRepository:
         return list(map(from_mongo, customers))
 
 
-repo = CustomersRepository()
+class Services(Enum):
+    """ Représentation des services valides dans le système. """
+    web_site = 'Make a web site'
+    mobile_app = 'Make a mobile app'
+    desktop_app = 'Make a desktop app'
 
-print(f"All customers: {repo.read_all()}")
 
-data = {"first_name": "John", "last_name": "Doe", "email": "john@example.com"}
+class ServicePrices:
+    """ Classe représentant les prix des services dans le système. """
 
-id = repo.create(data)
+    def __init__(self):
+        self.prices = {
+            'web_site': 5000,
+            'mobile_app': 8000,
+            'desktop_app': 10000
+        }
 
-print(f"Read customer: {repo.read(id)}")
+    def get_price(self, service):
+        """ Obtenir le prix associé à un service donné. """
+        return self.prices.get(service.name, None)
+
+
+# Exemple d'utilisation :
+response = db.quotations.find(
+    {"order_id": "65e735853aa841d1d1207acd"})
+
+for q in response:
+    print(q)

@@ -22,18 +22,18 @@ from fastapi import APIRouter, status
 from loguru import logger
 
 # Local modules
-from .order_api_adapter import OrdersApi
-# from .documentation import order_id_documentation
-from .order_data_adapter import OrdersRepository
-from .models import (OrderCreateModel, OrderModel,
+from .realisation_api_adapter import RealisationsApi
+# from .documentation import realisation_id_documentation
+from .realisation_data_adapter import RealisationsRepository
+from .models import (RealisationCreateModel, RealisationModel,
                      NotFoundError, FailedUpdateError, ConnectError)
 from ..models import ProcessResponseModel, UnknownError
 from ...tools.security import validate_authentication
-from ...worker.orders_tasks import create_order_processor, read_order_processor, list_orders_processor, cancel_order_processor, validate_order_processor, reject_order_processor, list_order_quotations_processor
+from ...worker.realisations_tasks import create_realisation_processor, read_realisation_processor, list_realisations_processor, start_realisation_processor, complete_realisation_processor
 
 # Constants
-ROUTER = APIRouter(prefix=f"/v1/orders", tags=[f"Orders"])
-""" Order API endpoint router. """
+ROUTER = APIRouter(prefix=f"/v1/realisations", tags=[f"Realisations"])
+""" Realisation API endpoint router. """
 
 
 # ---------------------------------------------------------
@@ -43,13 +43,14 @@ ROUTER = APIRouter(prefix=f"/v1/orders", tags=[f"Orders"])
              response_model=ProcessResponseModel,
              responses={500: {"model": UnknownError}},
              dependencies=[Depends(validate_authentication)])
-def create_order(payload: OrderCreateModel) -> ProcessResponseModel:
+def create_realisation(payload: RealisationCreateModel) -> ProcessResponseModel:
     """**Trigger Celery task processing of specified payload.**"""
-    # payload_json = OrderCreateModel(**payload.model_dump()).model_dump()
+    # payload_json = RealisationCreateModel(**payload.model_dump()).model_dump()
     payload_json = payload.model_dump()
+    #print(payload_json)
     try:
         # Add payload message to Celery for processing.
-        result = create_order_processor.delay(payload_json)
+        result = create_realisation_processor.delay(payload_json)
         logger.debug(f'Added task [{result.id}] to Celery for processing')
         return ProcessResponseModel(status=result.state, id=result.id)
 
@@ -60,38 +61,18 @@ def create_order(payload: OrderCreateModel) -> ProcessResponseModel:
 
 # ---------------------------------------------------------
 #
-@ROUTER.get('{/order_id}',
+
+
+@ROUTER.get('{/realisation_id}',
             status_code=202,
             response_model=ProcessResponseModel,
             responses={500: {"model": UnknownError}},
             dependencies=[Depends(validate_authentication)])
-async def get_order(order_id: str) -> ProcessResponseModel:
+async def get_realisation(realisation_id: str) -> ProcessResponseModel:
     """**Trigger Celery task processing of specified payload.**"""
     try:
         # Add payload message to Celery for processing.
-        result = read_order_processor.delay(order_id)
-        logger.debug(f'Added task [{result.id}] to Celery for processing')
-        return ProcessResponseModel(status=result.state, id=result.id)
-
-    except OperationalError as why:
-        errmsg = f'Celery task initialization failed: {why}'
-        logger.error(errmsg)
-        raise HTTPException(status_code=500, detail=errmsg)
-    
-# ---------------------------------------------------------
-#
-
-
-@ROUTER.get('{/order_id}/quotations',
-            status_code=202,
-            response_model=ProcessResponseModel,
-            responses={500: {"model": UnknownError}},
-            dependencies=[Depends(validate_authentication)])
-async def list_order_quotations(order_id: str) -> ProcessResponseModel:
-    """**Trigger Celery task processing of specified payload.**"""
-    try:
-        # Add payload message to Celery for processing.
-        result = list_order_quotations_processor.delay(order_id)
+        result = read_realisation_processor.delay(realisation_id)
         logger.debug(f'Added task [{result.id}] to Celery for processing')
         return ProcessResponseModel(status=result.state, id=result.id)
 
@@ -108,11 +89,11 @@ async def list_order_quotations(order_id: str) -> ProcessResponseModel:
             response_model=ProcessResponseModel,
             responses={500: {"model": UnknownError}},
             dependencies=[Depends(validate_authentication)])
-async def list_orders() -> ProcessResponseModel:
+async def list_realisations() -> ProcessResponseModel:
     """**Trigger Celery task processing of specified payload.**"""
     try:
         # Add payload message to Celery for processing.
-        result = list_orders_processor.delay()
+        result = list_realisations_processor.delay()
         logger.debug(f'Added task [{result.id}] to Celery for processing')
         return ProcessResponseModel(status=result.state, id=result.id)
 
@@ -125,7 +106,7 @@ async def list_orders() -> ProcessResponseModel:
 # ---------------------------------------------------------
 #
 @ROUTER.post(
-    "/{order_id}/cancel",
+    "/{realisation_id}/start",
     response_model=ProcessResponseModel,
     status_code=status.HTTP_202_ACCEPTED,
     responses={
@@ -134,11 +115,11 @@ async def list_orders() -> ProcessResponseModel:
         400: {'model': FailedUpdateError}
     },
     dependencies=[Depends(validate_authentication)])
-async def cancel_order(order_id: str, author_id: str, comment: str) -> ProcessResponseModel:
+async def start_realisation(realisation_id: str, author_id: str) -> ProcessResponseModel:
     """**Trigger Celery task processing of specified payload.**"""
     try:
         # Add payload message to Celery for processing.
-        result = cancel_order_processor.delay(order_id, author_id, comment)
+        result = start_realisation_processor.delay(realisation_id, author_id)
         logger.debug(f'Added task [{result.id}] to Celery for processing')
         return ProcessResponseModel(status=result.state, id=result.id)
 
@@ -151,7 +132,7 @@ async def cancel_order(order_id: str, author_id: str, comment: str) -> ProcessRe
 # ---------------------------------------------------------
 #
 @ROUTER.post(
-    "/{order_id}/validate",
+    "/{realisation_id}/complete",
     response_model=ProcessResponseModel,
     status_code=status.HTTP_202_ACCEPTED,
     responses={
@@ -160,37 +141,11 @@ async def cancel_order(order_id: str, author_id: str, comment: str) -> ProcessRe
         400: {'model': FailedUpdateError}
     },
     dependencies=[Depends(validate_authentication)])
-async def validate_order(order_id: str, author_id: str, comment: str="") -> ProcessResponseModel:
+async def complete_realisation(realisation_id: str, author_id: str) -> ProcessResponseModel:
     """**Trigger Celery task processing of specified payload.**"""
     try:
         # Add payload message to Celery for processing.
-        result = validate_order_processor.delay(order_id, author_id, comment)
-        logger.debug(f'Added task [{result.id}] to Celery for processing')
-        return ProcessResponseModel(status=result.state, id=result.id)
-
-    except OperationalError as why:
-        errmsg = f'Celery task initialization failed: {why}'
-        logger.error(errmsg)
-        raise HTTPException(status_code=500, detail=errmsg)
-
-
-# ---------------------------------------------------------
-#
-@ROUTER.post(
-    "/{order_id}/reject",
-    response_model=ProcessResponseModel,
-    status_code=status.HTTP_202_ACCEPTED,
-    responses={
-        500: {'model': ConnectError},
-        404: {'model': NotFoundError},
-        400: {'model': FailedUpdateError}
-    },
-    dependencies=[Depends(validate_authentication)])
-async def reject_order(order_id: str, author_id: str, comment: str) -> ProcessResponseModel:
-    """**Trigger Celery task processing of specified payload.**"""
-    try:
-        # Add payload message to Celery for processing.
-        result = reject_order_processor.delay(order_id, author_id, comment)
+        result = complete_realisation_processor.delay(realisation_id, author_id)
         logger.debug(f'Added task [{result.id}] to Celery for processing')
         return ProcessResponseModel(status=result.state, id=result.id)
 

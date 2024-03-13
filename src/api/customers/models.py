@@ -6,7 +6,7 @@ from pydantic import (BaseModel, UUID4, Field, EmailStr, ConfigDict)
 from typing import List
 
 # Local program modules
-
+from ..database import PyObjectId
 
 # ---------------------------------------------------------
 #
@@ -21,7 +21,7 @@ class CustomerCreateModel(BaseModel):
 #
 class CustomerModel(CustomerCreateModel):
     """ Representation of an Customer in the system. """
-    id: UUID4 = Field(default_factory=uuid4)
+    id: PyObjectId
 
     model_config = ConfigDict(
         populate_by_name=True,

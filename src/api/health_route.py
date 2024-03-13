@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright: Wilde Consulting
-  License: Apache 2.0
-
-VERSION INFO::
-    $Repo: fastapi_celery
-  $Author: Anders Wiklund
-    $Date: 2023-08-27 15:46:50
-     $Rev: 48
-"""
 
 # Third party modules
 from fastapi import APIRouter

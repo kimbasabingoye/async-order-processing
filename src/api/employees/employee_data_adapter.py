@@ -27,6 +27,22 @@ class EmployeesRepository:
         response = db.employees.find_one({"_id": ObjectId(employee_id)})
 
         return from_mongo(response)
+    
+    # ---------------------------------------------------------
+    #
+    def check_employee(self, employee_id: str) -> bool:
+        """ Check if the customer exist.
+
+        :param key: Index key.
+        :return: True if customer is found and False if not.
+        """
+
+        response = self._read(employee_id)
+
+        if response:
+            return True
+
+        return False
 
     # ---------------------------------------------------------
     #

@@ -8,107 +8,82 @@ from pydantic import (BaseModel, UUID4, Field,  EmailStr, ConfigDict)
 from typing import List, Optional
 
 # Local program modules
-from src.api.database import PyObjectId
-
-
-class Services(str, Enum):
-    """ Representation of valid services in the system. """
-    web_site = 'Make a web site'
-    mobile_app = 'Make a mobile app'
-    desktop_app = 'Make a desktop app'
-
-
-class ServicePrices:
-    """ Classe représentant les prix des services dans le système. """
-
-    def __init__(self):
-        self.prices = {
-            'web_site': 5000,
-            'mobile_app': 8000,
-            'desktop_app': 10000
-        }
-
-    def get_price(self, service):
-        """ Obtenir le prix associé à un service donné. """
-        return self.prices.get(service.name, None)
+from ..database import PyObjectId
 
 
 # ---------------------------------------------------------
 #
-class OrderStatus(str, Enum):
-    """ Order status changes.
+class QuotationStatus(str, Enum):
+    """ Quotation status changes.
 
-    UREV -> ORAC/OREJ/ORCA -> RESC -> REST -> RECO
-
+    QGEN -> QVAL/QCAN -> QACC/QREJ
     """
-    UREV = 'underReview'            
-    ORAC = 'orderAccepted'          
-    OREJ = 'orderRejected'          
-    ORCA = 'orderCancelled'         
-    RESC = 'realisationScheduled'
-    REST = 'realisationStarted'
-    RECO = 'realisationCompleted'              
+
+    QUREV = 'quotationUnderReview'     
+    QVAL = 'quotationValidated'     
+    QCAN = 'quotationCancelled'       
+    QREJ = 'quotationRejected'      
+    QACC = 'quotationAccepted'      
 
 
 # ---------------------------------------------------------
 #
-class OrderCreateModel(BaseModel):
+class QuotationCreateModel(BaseModel):
     """ Representation of an data required when creating order in the system. """
-    customer_id: PyObjectId
-    service: Services
-    description: str
+    price: int
+    order_id: PyObjectId
+    details: str
+    owner_id: Optional[PyObjectId]  # generated or created by employee
+    
+
 
 # ---------------------------------------------------------
 #
-
-
 class StateUpdateSchema(BaseModel):
-    """ Representation of an Order status history in the system. """
-    new_status: OrderStatus
+    """ Representation of an Quotation status history in the system. """
+    new_status: QuotationStatus
     when: datetime = Field(default_factory=datetime.utcnow)
-    #is_employee: bool
+    # is_employee: bool
     by: PyObjectId
-    comment: str = ""
 
     def dict(self):
         return {
             'new_status': self.new_status,
             'when': self.when.isoformat(),
-            #'is_employee': self.is_employee,
-            'by': self.by,
-            'comment': self.comment
+            'by': self.by
         }
 
 
-class OrderCreateInternalModel(OrderCreateModel):
+class QuotationCreateInternalModel(QuotationCreateModel):
     """ Representation of an data required when creating order in the system. """
-    status: OrderStatus
+    status: QuotationStatus
     update_history: Optional[List[StateUpdateSchema]]
     created: datetime = Field(default_factory=datetime.utcnow)
+    
 
 
-class OrderModel(OrderCreateInternalModel):
-    """ Representation of Order in the system. """
+class QuotationModel(QuotationCreateInternalModel):
+    """ Representation of Quotation in the system. """
 
     id: PyObjectId = Field(alias="_id", default=None)
 
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True)
-    
 
     # ---------------------------------------------------------
     #
 
     def dict(self) -> dict:
-        """Return dictionary representation of OrderModel."""
+        """Return dictionary representation of QuotationModel."""
         data = {
             'id': str(self.id),
-            'service': self.service,
-            'description': self.description,
+            'order_id': self.order_id,
+            'owner_id': self.owner_id,
+            'price': self.price,
             'status': self.status,
             'created': self.created.isoformat(),
-            'customer_id': str(self.customer_id)
+            'details': self.details
         }
         # Handle the case where update_history might be None
         if self.update_history is not None:
@@ -122,12 +97,12 @@ class OrderModel(OrderCreateInternalModel):
 #
 class NotFoundError(BaseModel):
     """ Define model for a http 404 exception (Not Found). """
-    detail: str = "Order not found in DB"
+    detail: str = "Quotation not found in DB"
 
 
 class FailedUpdateError(BaseModel):
     """ Define model for a http 400 exception (Unprocessable Entity). """
-    detail: str = "Failed updating Order in DB"
+    detail: str = "Failed updating Quotation in DB"
 
 
 class ConnectError(BaseModel):

@@ -20,7 +20,7 @@ class CustomersRepository:
     # ---------------------------------------------------------
     #
     @staticmethod
-    def _read(customer_id: UUID4) -> CustomerModel:
+    def _read(customer_id: str) -> CustomerModel:
         """ Read Customer for matching index key from DB collection customers.
 
         :param key: Index key.
@@ -30,6 +30,22 @@ class CustomersRepository:
         response = db.customers.find_one({"_id": ObjectId(customer_id)})
 
         return from_mongo(response)
+
+    # ---------------------------------------------------------
+    #
+    def check_customer(self, customer_id: str) -> bool:
+        """ Read Customer for matching index key from DB collection customers.
+
+        :param key: Index key.
+        :return: True if customer is found and False if not.
+        """
+
+        response = self._read(customer_id)
+
+        if response:
+            return True
+
+        return False
 
     # ---------------------------------------------------------
     #
@@ -59,7 +75,7 @@ class CustomersRepository:
             # created_customer = self.read(str(new_customer.inserted_id))
             return str(new_customer.inserted_id)
         except Exception as e:
-            print(e)
+            # print(e)
             raise HTTPException(status_code=500,
                                 detail=f"Customer creation failed. Check details provided: {payload}")
 

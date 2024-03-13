@@ -11,7 +11,8 @@ from typing import List
 from .order_data_adapter import OrdersRepository
 from .models import OrderCreateModel, OrderModel
 from .order_api_logic import OrderApiLogic
-
+from ..quotations.models import QuotationModel
+from ..database import PyObjectId
 
 # ------------------------------------------------------------------------
 #
@@ -63,24 +64,27 @@ class OrdersApi:
     # ---------------------------------------------------------
     #
 
-    def create_order(self, payload: OrderCreateModel) -> OrderModel:
+    def create_order(self, payload: OrderCreateModel) -> PyObjectId:
         """ Create a new order in DB.
 
         :param payload: order payload.
         :return: Created order object.
         :raise HTTPException [400]: when create order in DB api_db.orders failed.
         """
-        print(payload)
-        print(type(payload))
-        
+        #print(payload)
+        #print(type(payload))
+        """
         service = OrderApiLogic(
             repository=self.repo,
             service=payload['service'],
             description=payload['description'],
             customer_id=payload['customer_id']
+        )"""
+        service = OrderApiLogic(
+            repository=self.repo,
+            **payload
         )
         return service.create()       
-        #return self.repo.create(payload)
 
     # ---------------------------------------------------------
     #
@@ -95,11 +99,24 @@ class OrdersApi:
 
         return db_orders
     
+    # ---------------------------------------------------------
+    #
+
+    def list_order_quotations(self, order_id: str) -> List[QuotationModel]:
+        """ list all quotation for specified orders.
+
+        :return: list of found quotation
+        """
+
+        quotations = self.repo.read_order_quotations(order_id=order_id)
+
+        return quotations
+    
 
     # ---------------------------------------------------------
     #
 
-    def cancel_order(self, order_id: str, author_id: str) -> OrderModel:
+    def cancel_order(self, order_id: str, author_id: str, comment: str) -> bool:
         """ Cancel specified order (will be done by customer).
 
         :param order_id: id for order to cancel.
@@ -113,18 +130,14 @@ class OrdersApi:
 
         order = OrderApiLogic(
             repository=self.repo,
-            id=db_order['id'],
-            service=db_order['service'],
-            description=db_order['description'],
-            customer_id=db_order['customer_id'],
-            status=db_order['status'],
-            created=db_order['created'],
-            author_id=author_id)
+            author_id=author_id,
+            comment=comment,
+            **db_order)
         return order.cancel()
     # ---------------------------------------------------------
     #
 
-    def validate_order(self, order_id: str, author_id: str) -> OrderModel:
+    def validate_order(self, order_id: str, author_id: str, comment: str="") -> bool:
         """ Validate specified order (will be done by customer).
 
         :param order_id: id for order to cancel.
@@ -138,19 +151,15 @@ class OrdersApi:
 
         order = OrderApiLogic(
             repository=self.repo,
-            id=db_order['id'],
-            service=db_order['service'],
-            description=db_order['description'],
-            customer_id=db_order['customer_id'],
-            status=db_order['status'],
-            created=db_order['created'],
-            author_id=author_id)
+            author_id=author_id,
+            comment=comment,
+            **db_order)
         return order.validate()
 
      # ---------------------------------------------------------
     #
 
-    def reject_order(self, order_id: str, author_id: str) -> OrderModel:
+    def reject_order(self, order_id: str, author_id: str, comment: str) -> bool:
         """ Reject specified order (will be done by customer).
 
         :param order_id: id for order to cancel.
@@ -164,11 +173,7 @@ class OrdersApi:
 
         order = OrderApiLogic(
             repository=self.repo,
-            id=db_order['id'],
-            service=db_order['service'],
-            description=db_order['description'],
-            customer_id=db_order['customer_id'],
-            status=db_order['status'],
-            created=db_order['created'],
-            author_id=author_id)
+            author_id=author_id,
+            comment=comment,
+            **db_order)
         return order.reject()

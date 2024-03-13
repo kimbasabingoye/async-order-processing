@@ -25,6 +25,8 @@ from .api import process_routes, health_route
 from .api.customers.router import ROUTER as customers_router
 from .api.employees.router import ROUTER as employees_router
 from .api.orders.router import ROUTER as orders_router
+from .api.quotations.router import ROUTER as quotations_router
+from .api.realisations.router import ROUTER as realisations_router
 from .tools.custom_logging import create_unified_logger
 from .api.documentation import (license_info, tags_metadata, description)
 
@@ -63,6 +65,8 @@ class Service(FastAPI):
         self.include_router(customers_router)
         self.include_router(employees_router)
         self.include_router(orders_router)
+        self.include_router(quotations_router)
+        self.include_router(realisations_router)
 
         # Unify logging within the imported package's closure.
         self.logger = create_unified_logger()

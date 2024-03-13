@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright: Wilde Consulting
-  License: Apache 2.0
-
-VERSION INFO::
-    $Repo: fastapi_celery
-  $Author: Anders Wiklund
-    $Date: 2023-07-25 06:54:49
-     $Rev: 43
-"""
 
 # BUILTIN modules
 import site
@@ -32,6 +22,8 @@ SECRETS_DIR = ('/run/secrets'
 """ This is where your secrets are stored (in Docker or locally). """
 ENVIRONMENT = environ.get('ENVIRONMENT', 'dev')
 """ Current platform environment. """
+
+
 
 
 # -----------------------------------------------------------------------------

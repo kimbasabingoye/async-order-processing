@@ -45,7 +45,7 @@ ROUTER = APIRouter(prefix=f"/v1/customers", tags=[f"Customers"])
              dependencies=[Depends(validate_authentication)])
 async def create_customer(payload: CustomerCreateModel) -> ProcessResponseModel:
     """**Trigger Celery task processing of specified payload.**"""
-    payload_json = CustomerCreateModel(**payload.model_dump()).model_dump()
+    payload_json = payload.model_dump()
     try:
         # Add payload message to Celery for processing.
         result = create_customer_processor.delay(payload_json)
