@@ -1,0 +1,22 @@
+@startuml
+
+skinparam componentStyle uml2
+
+actor User
+participant "FastAPI Backend" as Backend
+participant MongoDB as DB
+participant "Celery Worker" as Worker
+participant RabbitMQ as Queue
+participant Flower as Monitoring
+participant "BI Dashboard" as Dashboard
+
+User -> Backend: Sends HTTP requests
+Backend -> DB: CRUD operations
+Backend -> Queue: Sends tasks
+Worker -> Queue: Listens for tasks
+Queue -> Worker: Sends tasks
+Worker -> DB: Performs tasks
+Backend -> Monitoring: Queries for worker status
+User -> Dashboard: Accesses BI data
+
+@enduml

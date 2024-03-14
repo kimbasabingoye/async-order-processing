@@ -24,7 +24,7 @@ from .config.setup import config
 from .api import process_routes, health_route
 from .api.customers.router import router as customers_router
 from .api.employees.router import ROUTER as employees_router
-from .api.orders.router import ROUTER as orders_router
+from .api.orders.router import router as orders_router
 from .api.quotations.router import ROUTER as quotations_router
 from .api.realisations.router import ROUTER as realisations_router
 from .tools.custom_logging import create_unified_logger

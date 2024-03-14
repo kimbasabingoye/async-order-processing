@@ -12,168 +12,46 @@ from .order_data_adapter import OrdersRepository
 from .models import OrderCreateModel, OrderModel
 from .order_api_logic import OrderApiLogic
 from ..quotations.models import QuotationModel
-from ..database import PyObjectId
+from ..database import PyObjectId, UpdateModel
 
-# ------------------------------------------------------------------------
-#
-class OrdersApi:
+from typing import List
+from .order_data_adapter import OrdersRepository
+from .models import OrderModel, OrderCreateModel
+from ..base_api_adapter import BaseAPIAdapter
+
+
+class OrdersAPIAdapter(BaseAPIAdapter):
     """
-    This class implemnts the Web API layer adapter.
+    API adapter for handling order-related operations.
     """
 
-    # ---------------------------------------------------------
-    #
     def __init__(self, repository: OrdersRepository):
-        """ The class initializer.
-
-        :param repository: Data layer handler object
-        """
-        self.repo = repository
-
-    # ---------------------------------------------------------
-    #
-    def _order_of(self, order_id: str) -> OrderModel:
-        """ Return specified order.
-
-        :param order_id: order id for order to find.
-        :return: Found order object.
-        :raise HTTPException [404]: when order not found in DB.
-        """
-        db_order = self.repo.read(order_id)
-
-        if not db_order:
-            errmsg = f"{order_id} not found in DB api_db.orders"
-            raise HTTPException(status_code=404, detail=errmsg)
-
-        return db_order
-
-    # ---------------------------------------------------------
-    #
+        super().__init__(repository)
 
     def get_order(self, order_id: str) -> OrderModel:
-        """ Return specified order. 
-
-        :param order_id: order id for order to find.
-        :return: Found order object.
-        :raise HTTPException [404]: when order not found in DB api_db.orders.
-        """
-        db_order = self._order_of(order_id)
-
-        return db_order
-
-    # ---------------------------------------------------------
-    #
-
-    def create_order(self, payload: OrderCreateModel) -> PyObjectId:
-        """ Create a new order in DB.
-
-        :param payload: order payload.
-        :return: Created order object.
-        :raise HTTPException [400]: when create order in DB api_db.orders failed.
-        """
-        #print(payload)
-        #print(type(payload))
-        """
-        service = OrderApiLogic(
-            repository=self.repo,
-            service=payload['service'],
-            description=payload['description'],
-            customer_id=payload['customer_id']
-        )"""
-        service = OrderApiLogic(
-            repository=self.repo,
-            **payload
-        )
-        return service.create()       
-
-    # ---------------------------------------------------------
-    #
+        """Get an order by ID."""
+        return OrderApiLogic(repository=self.repo).get(order_id)
 
     def list_orders(self) -> List[OrderModel]:
-        """ list all existing orders in DB api_db.orders.
-
-        :return: list of found orders
-        """
-
-        db_orders = self.repo.read_all()
-
-        return db_orders
-    
-    # ---------------------------------------------------------
-    #
+        """List all orders."""
+        return super().read_all_obj()
 
     def list_order_quotations(self, order_id: str) -> List[QuotationModel]:
-        """ list all quotation for specified orders.
+        """List all quotations for specified order."""
+        return self.repo.read_order_quotations(order_id)
 
-        :return: list of found quotation
-        """
+    def create_order(self, payload: OrderCreateModel) -> PyObjectId:
+        """Create a new order."""
+        return OrderApiLogic(repository=self.repo).create(payload)
 
-        quotations = self.repo.read_order_quotations(order_id=order_id)
+    def cancel_order(self, payload: UpdateModel) -> bool:
+        """Cancel specified order."""
+        return OrderApiLogic(repository=self.repo,).cancel(payload)
 
-        return quotations
-    
+    def validate_order(self, payload: UpdateModel) -> bool:
+        """Validate specified order (will be done by order)."""
+        return OrderApiLogic(repository=self.repo).validate(payload)
 
-    # ---------------------------------------------------------
-    #
-
-    def cancel_order(self, order_id: str, author_id: str, comment: str) -> bool:
-        """ Cancel specified order (will be done by customer).
-
-        :param order_id: id for order to cancel.
-        :return: Found Order object.
-        :raise HTTPException [400]: when failed to update DB api_db.orders.
-        :raise HTTPException [404]: when Order not found in DB api_db.orders.
-        """
-
-        # _order_of raise exception if the order is not found
-        db_order = self._order_of(order_id)
-
-        order = OrderApiLogic(
-            repository=self.repo,
-            author_id=author_id,
-            comment=comment,
-            **db_order)
-        return order.cancel()
-    # ---------------------------------------------------------
-    #
-
-    def validate_order(self, order_id: str, author_id: str, comment: str="") -> bool:
-        """ Validate specified order (will be done by customer).
-
-        :param order_id: id for order to cancel.
-        :return: Found Order object.
-        :raise HTTPException [400]: when failed to update DB api_db.orders.
-        :raise HTTPException [404]: when Order not found in DB api_db.orders.
-        """
-
-        # _order_of raise exception if the order is not found
-        db_order = self._order_of(order_id)
-
-        order = OrderApiLogic(
-            repository=self.repo,
-            author_id=author_id,
-            comment=comment,
-            **db_order)
-        return order.validate()
-
-     # ---------------------------------------------------------
-    #
-
-    def reject_order(self, order_id: str, author_id: str, comment: str) -> bool:
-        """ Reject specified order (will be done by customer).
-
-        :param order_id: id for order to cancel.
-        :return: Found Order object.
-        :raise HTTPException [400]: when failed to update DB api_db.orders.
-        :raise HTTPException [404]: when Order not found in DB api_db.orders.
-        """
-
-        # _order_of raise exception if the order is not found
-        db_order = self._order_of(order_id)
-
-        order = OrderApiLogic(
-            repository=self.repo,
-            author_id=author_id,
-            comment=comment,
-            **db_order)
-        return order.reject()
+    def reject_order(self, payload: UpdateModel) -> bool:
+        """ Reject specified order (will be done by order)."""
+        return OrderApiLogic(repository=self.repo).reject(payload)

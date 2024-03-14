@@ -1,6 +1,4 @@
 from typing import List
-from fastapi import HTTPException
-from pydantic import BaseModel
 from .customer_data_adapter import CustomersRepository
 from .models import CustomerModel, CustomerCreateModel
 from ..base_api_adapter import BaseAPIAdapter

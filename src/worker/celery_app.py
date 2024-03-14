@@ -130,5 +130,6 @@ def response_handler(task: callable, status: str, retval: Any,
     if 'responseQueue' in payload:
         asyncio.run(send_rabbit_response(payload['responseQueue'], response))
     """
+    #logger.info(f"Type of response before send rabbitmq: {response}")
 
     asyncio.run(send_rabbit_response(queue_name='CallerService', result=response))

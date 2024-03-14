@@ -1,221 +1,154 @@
-# BUILTIN modules
 from datetime import datetime
-from typing import Optional, List
+from typing import List
 
-# Third party modules
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
-# Local modules
-from .models import Services, OrderStatus, OrderModel, OrderCreateModel, StateUpdateSchema, OrderCreateInternalModel, ServicePrices
+from .models import OrderStatus, OrderModel, OrderCreateInternalModel
+from ..database import  UpdateModel, PyObjectId
 from .order_data_adapter import OrdersRepository
-from ..quotations.quotation_api_logic import QuotationApiLogic
-from ..quotations.quotation_data_adapter import QuotationsRepository
 from ..quotations.quotation_api_adapter import QuotationsApi
-from ..quotations.models import QuotationCreateModel, QuotationStatus
-from ..customers.customer_data_adapter import CustomersRepository
-from ..employees.employee_data_adapter import EmployeesRepository
+from ..quotations.models import QuotationCreateModel
+from ..quotations.quotation_data_adapter import QuotationsRepository
+from .services import get_service_prices
+from ..utils import validate_user_is_customer, validate_user_is_employee, validate_order_exist
+from ...tools.custom_logging import create_unified_logger
+
+logger = create_unified_logger()
 
 
-# ------------------------------------------------------------------------
-#
 class OrderApiLogic:
     """
-    This class implements the Order web API business logic layer.
+    This class implements the Order endpoints business logic layer.
     """
 
-    # ---------------------------------------------------------
-    #
-    def __init__(
-            self,
-            repository: OrdersRepository,
-            service: Services = None,
-            description: str = None,
-            customer_id: str = None,
-            id: str = None,
-            status: OrderStatus = None,
-            created: datetime = None,
-            update_history: List[StateUpdateSchema] = None,
-            author_id: int = None,  # for order modification
-            comment: str = ""
-            # new_status: OrderStatus = None  # for order modification
-    ):
-        """ The class initializer.
-
-        :param id: Order id.
-        :param service: Service ordered.
-        :param description: more detail about the service.
-        :param customer_id: The individual that created the order.
-        :param status: Current order status.
-        :param created: Order created timestamp.
-
-
-        """
-        self.id = id
-        self.service = service
-        self.description = description
-        self.customer_id = customer_id
-        self.status = status
-        self.created = created
-        self.update_history = update_history
-        self.author_id = author_id
-        self.comment = comment
-        # self.new_status = new_status
-
-        # Initialize objects.
+    def __init__(self, repository: OrdersRepository):
+        """Class initializer."""
         self.repo = repository
 
-    # ---------------------------------------------------------
-    #
-    def create(self) -> OrderModel:
-        """ Create a new order in DB.
+    def get(self, order_id: PyObjectId) -> OrderModel:
+        """Read order in DB."""
+        validate_order_exist(order_id)
+        return self.repo.read(order_id)
 
-        - check if the customer exist(registred) in customer collection
-        - Then create the order if the customer is registred
+    def create(self, payload: OrderCreateInternalModel) -> OrderModel:
+        """Create a new order in DB."""
 
-        :raise HTTPException [400]: when create order in orders collections failed.
-        :raise HTTPException [403]: when customer don't exist in customers collection.
-        """
+        customer_id = payload.get("customer_id")
+        validate_user_is_customer(customer_id)
 
-        # Check the existence of the customer
-        # Try to get the customer
-        # if customer not found an exception will be raised
-        customer_exist = CustomersRepository().check_customer(self.customer_id)
-
-        if not customer_exist:
-            errmsg = f"Cannot create an order for the customer: {self.customer_id}. Customer don't exist"
-            raise HTTPException(status_code=403, detail=errmsg)
-
-        # Create a new Order in DB.
-        db_order = OrderCreateInternalModel(service=self.service,
-                                            description=self.description,
-                                            customer_id=self.customer_id,
-                                            status=OrderStatus.UREV,
-                                            created=datetime.utcnow(),
-                                            update_history=[])
-        new_order_id = self.repo.create(db_order)
+        db_order = OrderCreateInternalModel(
+            service=payload.get("service"),
+            description=payload.get("description"),
+            customer_id=customer_id,
+            status=OrderStatus.UREV,
+            created=datetime.utcnow(),
+            update_history=[]
+        )
+        new_order_id = self.repo.create(db_order.model_dump())
 
         if not new_order_id:
-            errmsg = f"Create failed for {self.id=} in orders collection"
-            raise HTTPException(status_code=400, detail=errmsg)
+            raise HTTPException(
+                status_code=400, detail=f"Failed to create order")
 
         return new_order_id
 
-    # ---------------------------------------------------------
-    #
+    def cancel(self, payload: UpdateModel) -> bool:
+        """Cancel current order."""
+        order_id = payload.get('obj_id')
+        author_id = payload.get('author_id')
+        comment = payload.get('comment')
 
-    def cancel(self) -> bool:
-        """ Cancel current order. 
-        Only the owner of the quotation is allowed to do this action
+        if not order_id or not author_id:
+            raise HTTPException(
+                status_code=400, detail="Order ID and author ID are required")
 
-        :raise HTTPException [403]: when cancel request came too late.
-        :raise HTTPException [403]: when the requester don't have enough right.
-        :raise HTTPException [400]: when Order update in orders table failed.
-        """
+        validate_order_exist(order_id)
 
-        if self.status in (OrderStatus.RESC, OrderStatus.REST, OrderStatus.RECO, OrderStatus.ORCA):
-            errmsg = f'Could not cancel order with id {self.id}. Current status: {self.status}'
-            raise HTTPException(status_code=403, detail=errmsg)
+        order = self.repo.read(order_id)
 
-        # check if the author can perform this operation
-        customer_exist = CustomersRepository().check_customer(self.customer_id)
-        if not customer_exist:
-            errmsg = f"You are not allowed to perform this operation"
-            raise HTTPException(status_code=403, detail=errmsg)
+        if order['status'] in {OrderStatus.RESC, OrderStatus.REST, OrderStatus.RECO, OrderStatus.ORCA}:
+            raise HTTPException(
+                status_code=403, detail=f"Could not cancel order with ID {order_id}. Current status: {order['status']}")
 
-        # author must be the owner(customer) of the order
-        if self.customer_id != self.author_id:
-            errmsg = f"Operation not allowed. You must be the owner of the order"
-            raise HTTPException(status_code=403, detail=errmsg)
+        validate_user_is_customer(author_id)
 
-        # Update Order status in DB.
-        updated_order = self.repo.update(
-            order_id=self.id, new_status=OrderStatus.ORCA, author_id=self.author_id, comment=self.comment)
+        if order.get('customer_id') != author_id:
+            raise HTTPException(
+                status_code=403, detail=f"Operation not allowed. You must be the owner of the order")
 
-        if not updated_order:
-            errmsg = f"Failed updating {self.id=} in orders table"
-            raise HTTPException(status_code=400, detail=errmsg)
+        if not self.repo.update(order_id=order_id, new_status=OrderStatus.ORCA, author_id=author_id, comment=comment):
+            raise HTTPException(
+                status_code=400, detail=f"Failed updating order with ID {order_id}")
 
         return True
 
-    # ---------------------------------------------------------
-    #
-    def validate(self) -> bool:
-        """ Validate current order.
-        Only employees are allowed to perform this action
+    def validate(self, payload: UpdateModel) -> bool:
+        """Validate current order."""
+        order_id = payload.get('obj_id')
+        author_id = payload.get('author_id')
+        comment = payload.get('comment')
 
-        :raise HTTPException [403]: when validate request came too late.
-        :raise HTTPException [403]: when the requester don't have enough right.
-        :raise HTTPException [400]: when Order update in orders table failed.
-        """
+        if not order_id or not author_id:
+            raise HTTPException(
+                status_code=400, detail="Order ID and author ID are required")
 
-        if self.status != OrderStatus.UREV:
-            errmsg = f'Could not validate order with id {self.id}. Current status: {self.status}'
-            raise HTTPException(status_code=400, detail=errmsg)
+        validate_order_exist(order_id)
 
-        # check if the author can perform this operation
-        # author must be an employee
-        employee_exist = EmployeesRepository().check_employee(self.author_id)
+        order = self.repo.read(order_id)
 
-        if not employee_exist:
-            errmsg = f"You are not allowed to perform this operation."
-            raise HTTPException(status_code=403, detail=errmsg)
+        if order['status'] != OrderStatus.UREV:
+            raise HTTPException(
+                status_code=400, detail=f"Could not validate order with ID {order_id}. Current status: {order['status']}")
 
-        # Update Order status in DB.
-        validated_order = self.repo.update(
-            order_id=self.id, new_status=OrderStatus.ORAC, author_id=self.author_id, comment=self.comment)
+        validate_user_is_employee(author_id)
 
-        if not validated_order:
-            errmsg = f"Failed updating {self.id=} in orders table"
-            raise HTTPException(status_code=400, detail=errmsg)
+        if not self.repo.update(order_id=order_id, new_status=OrderStatus.ORAC, author_id=author_id, comment=comment):
+            raise HTTPException(
+                status_code=400, detail=f"Failed updating order with ID {order_id}")
 
-        # generate quotation
+        # Generate quotation
+        product = order.get('service')
+        product_price = get_service_prices(product)
+        logger.debug(f"Service: {product}")
+        logger.debug(f"Type: {type(order.get('service'))}")
+        logger.debug(f"Price: {product_price}")
         service = QuotationsApi(QuotationsRepository())
         payload = QuotationCreateModel(
-            price=ServicePrices().get_price(self.service),
-            order_id=self.id,
-            details="",
+            price=product_price,
+            order_id=order_id,
+            details="Generated",
             owner_id=None
         )
         quotation_id = service.create_quotation(payload.model_dump())
         if not quotation_id:
-            errmsg = f"Failed generating quotation for this order={self.id}"
-            raise HTTPException(status_code=400, detail=errmsg)
+            raise HTTPException(
+                status_code=400, detail=f"Failed generating quotation for order with ID {order_id}")
+            # rollback
 
         return True
 
-    # ---------------------------------------------------------
-    #
-    def reject(self) -> bool:
-        """ Reject current order.
-        Only employees are allowed to perform this action
+    def reject(self, payload: UpdateModel) -> bool:
+        """Reject current order."""
+        order_id = payload.get('obj_id')
+        author_id = payload.get('author_id')
+        comment = payload.get('comment')
 
-        :raise HTTPException [403]: when reject request came too late.
-        :raise HTTPException [403]: when the requester don't have enough right.
-        :raise HTTPException [400]: when Order update in orders collection failed.
-        """
+        if not order_id or not author_id:
+            raise HTTPException(
+                status_code=400, detail="Order ID and author ID are required")
 
-        if self.status != OrderStatus.UREV:
-            errmsg = f'Could not reject order with id {self.id}. Current status: {self.status}'
-            raise HTTPException(status_code=400, detail=errmsg)
+        validate_order_exist(order_id)
 
-        # check if the author can perform this operation
-        # author must be an employee
-        employee_exist = EmployeesRepository().check_employee(self.author_id)
+        order = self.repo.read(order_id)
 
-        if not employee_exist:
-            errmsg = f"Operation not allowed. You must be an employee."
-            raise HTTPException(status_code=403, detail=errmsg)
+        if order['status'] != OrderStatus.UREV:
+            raise HTTPException(
+                status_code=400, detail=f"Could not reject order with ID {order_id}. Current status: {order['status']}")
 
-        # Update Order status in DB.
-        updated_order = self.repo.update(
-            order_id=self.id, new_status=OrderStatus.OREJ, author_id=self.author_id, comment=self.comment)
+        validate_user_is_employee(author_id)
 
-        if not updated_order:
-            errmsg = f"Failed updating {self.id=} in orders table"
-            raise HTTPException(status_code=400, detail=errmsg)
-
-        # send notification to customer
+        if not self.repo.update(order_id=order_id, new_status=OrderStatus.OREJ, author_id=author_id, comment=comment):
+            raise HTTPException(
+                status_code=400, detail=f"Failed updating order with ID {order_id}")
 
         return True
-    
-    
