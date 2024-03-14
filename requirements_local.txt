@@ -1,9 +1,0 @@
-aio-pika
-celery
-fastapi
-httpx
-loguru
-pymongo
-pydantic-settings
-python-dotenv
-uvicorn

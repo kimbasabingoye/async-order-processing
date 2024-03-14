@@ -38,7 +38,7 @@ class OrdersAPIAdapter(BaseAPIAdapter):
 
     def list_order_quotations(self, order_id: str) -> List[QuotationModel]:
         """List all quotations for specified order."""
-        return self.repo.read_order_quotations(order_id)
+        return OrderApiLogic(self.repo).get_order_quotations(order_id)
 
     def create_order(self, payload: OrderCreateModel) -> PyObjectId:
         """Create a new order."""

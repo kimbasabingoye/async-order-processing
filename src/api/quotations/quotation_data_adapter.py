@@ -7,14 +7,12 @@ from bson import ObjectId
 from pydantic import UUID4
 from typing import List, Optional
 from bson import json_util
+from loguru import logger
 
 # Local modules
-from .models import (QuotationCreateModel, QuotationModel, QuotationStatus,
-                     QuotationCreateInternalModel, StateUpdateSchema, NotFoundError, ConnectError)
+from .models import (QuotationModel, QuotationStatus,
+                     QuotationCreateInternalModel, StateUpdateSchema, NotFoundError)
 from ..database import db, from_mongo, PyObjectId
-from ...tools.custom_logging import create_unified_logger
-
-logger = create_unified_logger()
 
 
 class QuotationsRepository:

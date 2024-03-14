@@ -1,23 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Copyright: Wilde Consulting
-  License: Apache 2.0
-
-VERSION INFO::
-    $Repo: fastapi_celery
-  $Author: Anders Wiklund
-    $Date: 2023-07-24 19:41:02
-     $Rev: 41
-"""
-
 # BUILTIN modules
 import json
 
-# Third party modules
 
 # Local modules
 from ..config.setup import config
-from .celery_app import response_handler, send_rabbit_response, send_restful_response, WORKER, logger
+from .celery_app import response_handler,  WORKER, logger
 from ..api.realisations.realisation_api_adapter import RealisationsApi
 from ..api.realisations.realisation_data_adapter import RealisationsRepository
 
@@ -93,8 +80,6 @@ def list_realisations_processor(task: callable) -> dict:
     service = RealisationsApi(RealisationsRepository())
 
     return service.list_realisations()
-
-
 
 
 # ---------------------------------------------------------

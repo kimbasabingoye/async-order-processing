@@ -24,7 +24,7 @@ from httpx import AsyncClient, ConnectTimeout, ConnectError
 from ..config.setup import config
 from ..config import celery_config
 from ..tools.rabbit_client import RabbitClient
-from ..tools.custom_logging import create_unified_logger
+from loguru import logger
 
 # Constants
 WORKER = Celery(__name__)
@@ -37,7 +37,6 @@ WORKER.config_from_object(celery_config)
 
 # Create unified Celery task logger instance.
 get_task_logger(__name__)
-logger = create_unified_logger()
 
 
 # ---------------------------------------------------------

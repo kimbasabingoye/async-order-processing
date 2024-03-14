@@ -1,19 +1,17 @@
 from datetime import datetime
 from typing import List
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException
+from loguru import logger
 
 from .models import OrderStatus, OrderModel, OrderCreateInternalModel
 from ..database import  UpdateModel, PyObjectId
 from .order_data_adapter import OrdersRepository
 from ..quotations.quotation_api_adapter import QuotationsApi
-from ..quotations.models import QuotationCreateModel
+from ..quotations.models import QuotationCreateModel, QuotationModel
 from ..quotations.quotation_data_adapter import QuotationsRepository
 from .services import get_service_prices
 from ..utils import validate_user_is_customer, validate_user_is_employee, validate_order_exist
-from ...tools.custom_logging import create_unified_logger
-
-logger = create_unified_logger()
 
 
 class OrderApiLogic:
@@ -29,6 +27,14 @@ class OrderApiLogic:
         """Read order in DB."""
         validate_order_exist(order_id)
         return self.repo.read(order_id)
+    
+    def get_order_quotations(self, order_id: PyObjectId) -> List[QuotationModel]:
+        """List all quotations for specified order."""
+
+        validate_order_exist(order_id)
+
+        return self.repo.read_order_quotations(order_id)
+
 
     def create(self, payload: OrderCreateInternalModel) -> OrderModel:
         """Create a new order in DB."""

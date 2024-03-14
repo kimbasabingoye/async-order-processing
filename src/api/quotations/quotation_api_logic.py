@@ -6,9 +6,10 @@ import random
 
 # Third party modules
 from fastapi import HTTPException
+from loguru import logger
 
 # Local modules
-from .models import QuotationStatus, QuotationModel, QuotationCreateModel, StateUpdateSchema, QuotationCreateInternalModel
+from .models import QuotationStatus, QuotationModel, StateUpdateSchema, QuotationCreateInternalModel
 from .quotation_data_adapter import QuotationsRepository
 from ..orders.order_data_adapter import OrdersRepository
 from ..orders.models import OrderStatus
@@ -17,10 +18,6 @@ from ..customers.customer_data_adapter import CustomersRepository
 from ..realisations.realisation_data_adapter import RealisationsRepository
 from ..realisations.realisation_api_adapter import RealisationsApi
 from ..realisations.models import RealisationCreateModel
-
-from ...tools.custom_logging import create_unified_logger
-
-logger = create_unified_logger()
 
 
 # ------------------------------------------------------------------------

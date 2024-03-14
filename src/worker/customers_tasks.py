@@ -1,6 +1,5 @@
 import json
 
-from kombu.exceptions import OperationalError
 from loguru import logger
 
 from ..config.setup import config

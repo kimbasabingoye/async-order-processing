@@ -38,7 +38,7 @@ async def create_customer(payload: CustomerCreateModel) -> ProcessResponseModel:
 
 # Endpoint for retrieving a customer
 @router.get(
-    "{/customer_id}",
+    "/{customer_id}",
     status_code=202,
     response_model=ProcessResponseModel,
     responses={500: {"model": UnknownError}},

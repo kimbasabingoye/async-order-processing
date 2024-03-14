@@ -5,7 +5,7 @@ import json
 
 # Local modules
 from ..config.setup import config
-from .celery_app import response_handler, send_rabbit_response, send_restful_response, WORKER, logger
+from .celery_app import response_handler, WORKER, logger
 from ..api.orders.order_api_adapter import OrdersAPIAdapter
 from ..api.orders.order_data_adapter import OrdersRepository
 from ..api.database import UpdateModel

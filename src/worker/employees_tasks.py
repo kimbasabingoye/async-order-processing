@@ -1,10 +1,9 @@
 import json
 
-from kombu.exceptions import OperationalError
 from loguru import logger
 
 from ..config.setup import config
-from .celery_app import response_handler, send_rabbit_response, send_restful_response, WORKER
+from .celery_app import response_handler, WORKER
 from ..api.employees.employee_api_adapter import EmployeesAPIAdapter
 from ..api.employees.employee_data_adapter import EmployeesRepository
 

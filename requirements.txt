@@ -13,3 +13,4 @@ uvicorn
 flower
 pytest
 pytest-asyncio
+pydantic[email]
