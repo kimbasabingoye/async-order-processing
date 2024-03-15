@@ -2,7 +2,7 @@
 from uuid import uuid4
 
 # Third party modules
-from pydantic import (BaseModel, UUID4, Field, EmailStr, ConfigDict)
+from pydantic import (BaseModel, EmailStr)
 from typing import List
 
 # Local program modules
@@ -35,9 +35,6 @@ class CustomersCollection(BaseModel):
     customers: List[CustomerModel]
 
 
-
-# -----------------------------------------------------------------------------
-#
 class NotFoundError(BaseModel):
     """ Define model for a http 404 exception (Not Found). """
     detail: str = "Customer not found in DB"
@@ -46,4 +43,3 @@ class NotFoundError(BaseModel):
 class FailedUpdateError(BaseModel):
     """ Define model for a http 400 exception (Unprocessable Entity). """
     detail: str = "Failed updating Customer in DB"
-

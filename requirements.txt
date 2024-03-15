@@ -1,14 +1,15 @@
-aio-pika
-celery
 fastapi
+uvicorn
+celery[redis]
+redis
+pymongo
 httpx
 loguru
-pymongo
 pydantic
 pydantic-settings
 python-dotenv
-uvicorn
 
+aio-pika
 # dev
 flower
 pytest

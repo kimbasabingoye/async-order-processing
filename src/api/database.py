@@ -1,16 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Copyright: Wilde Consulting
-  License: Apache 2.0
-
-VERSION INFO::
-    $Repo: fastapi_mongo
-  $Author: Anders Wiklund
-    $Date: 2023-02-28 19:26:05
-     $Rev: 52
-"""
-
-# Third party modules
 from typing import Generic, List
 from typing import List, TypeVar, Generic
 from bson import ObjectId
@@ -23,18 +10,14 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from enum import Enum
 
-# Local program modules
 from ..config.setup import config
 
 client = MongoClient(config.mongo_url)
 
-db = client.get_database("AsyncOrderProcDB")
+db = client.get_database(config.database_name)
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
-
-# ------------------------------------------------------------------------
-#
 def from_mongo(data: dict):
     """ Convert "_id" (str object) into "id" str. """
 

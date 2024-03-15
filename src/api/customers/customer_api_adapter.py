@@ -16,7 +16,7 @@ class CustomersAPIAdapter(BaseAPIAdapter):
         """Get a customer by ID."""
         return self.get_obj(customer_id)
 
-    def create_customer(self, payload: CustomerCreateModel) -> CustomerModel:
+    def create_customer(self, payload: CustomerCreateModel) -> str:
         """Create a new customer."""
         return self.create_obj(payload)
 

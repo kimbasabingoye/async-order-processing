@@ -1,17 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Copyright: Wilde Consulting
-  License: Apache 2.0
-
-VERSION INFO::
-    $Repo: fastapi_celery
-  $Author: Anders Wiklund
-    $Date: 2023-07-24 19:41:02
-     $Rev: 41
-"""
-
-# BUILTIN modules
+import json
+from bson import ObjectId
+from kombu.serialization import register
 import asyncio
+import datetime
 from typing import Any
 from traceback import format_exception
 
@@ -37,6 +28,26 @@ WORKER.config_from_object(celery_config)
 
 # Create unified Celery task logger instance.
 get_task_logger(__name__)
+
+# Used for ObjectID serialization 
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        if isinstance(o, datetime):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
+
+# Register the custom JSON encoder with Celery
+register('customjson', CustomJSONEncoder().encode, json.loads,
+         content_type='application/json', content_encoding='utf-8')
+
+
+WORKER.conf.update(
+    task_serializer='customjson',
+    result_serializer='customjson',
+)
 
 
 # ---------------------------------------------------------
