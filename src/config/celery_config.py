@@ -19,7 +19,7 @@ from .setup import config
 broker_url = config.rabbit_url
 
 # Using the database to store task state and results.
-result_backend = f'{config.mongo_url}service_results'
+result_backend = config.redis_url
 
 # Add input parameters to backend result (used by retry endpoint).
 result_extended = True
