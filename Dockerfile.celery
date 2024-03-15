@@ -1,0 +1,36 @@
+# Use official Python image as base
+FROM python:3.10-bullseye
+
+RUN apt update && apt upgrade
+
+WORKDIR /app
+
+# Copy requirements.txt to the container
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# create the app user and update system dependencies
+RUN set -eux; \
+    addgroup -gid 1000 app; \
+    useradd -g app app;
+
+ENV APP_HOME=/home/app TZ=Europe/Paris
+
+# copy project and chown all the files to the app user
+COPY --chown=app:app . $APP_HOME/app
+
+# set work directory
+WORKDIR $APP_HOME
+
+# change to the app user
+USER app
+
+# Copy the rest of the application code to the container
+COPY . .
+
+# Command to run Celery worker
+# CMD ["celery", "-A", "tasks", "worker", "--loglevel=info"]
+CMD [ "sh", "scripts/start_celery.sh"]
