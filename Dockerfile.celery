@@ -1,5 +1,5 @@
 # Use official Python image as base
-FROM python:3.10-bullseye
+FROM python:3.10-slim-bullseye
 
 RUN apt update && apt upgrade
 

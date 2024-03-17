@@ -38,7 +38,9 @@ async def process_incoming_message(message: dict):
 async def receiver():
     """ Start a asyncio task to consume messages. """
     print(f'Started RabbitMQ message queue subscription on {SERVICE}...')
-    client = RabbitClient(config.rabbit_url, SERVICE, process_incoming_message)
+    # for testing
+    rabbit_url = "amqp://guest:guest@localhost/%2F"
+    client = RabbitClient(rabbit_url, SERVICE, process_incoming_message)
     connection = await asyncio.create_task(client.start_subscription())
 
     try:

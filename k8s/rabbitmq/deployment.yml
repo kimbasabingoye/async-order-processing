@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-deployment
+  namespace: asyncop-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-app
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-app
+    spec:
+      containers:
+        - image: rabbitmq:latest
+          imagePullPolicy: IfNotPresent
+          name: rabbitmq-container
+          ports:
+            - containerPort: 5672
+          readinessProbe:
+            tcpSocket:
+              port: 5672
+          livenessProbe:
+            tcpSocket:
+              port: 5672
+            periodSeconds: 15
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: asyncop-project
+spec:
+  selector:
+    app: rabbitmq-app
+  ports:
+    - port: 5672
+      targetPort: 5672

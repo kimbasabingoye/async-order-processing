@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-depl
+  namespace: asyncop-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-app
+  template:
+    metadata:
+      labels:
+        app: celery-app
+    spec:
+      containers:
+        - image: sabingoyek/async-order-proc:1.0
+          command: ["sh", "scripts/start_celery.sh"]
+          envFrom:
+            - secretRef:
+                name: asyncop-secret
+            - configMapRef:
+                name: asyncop-config
+          name: celery-container
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "0.5"
+            limits:
+              memory: "1Gi"
+              cpu: "1"

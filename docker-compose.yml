@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   mongo:
-    image: mongo
+    image: mongo:latest
     ports:
       - 27017:27017
     environment:
@@ -18,7 +18,7 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: mongoadmin
       ME_CONFIG_MONGODB_ADMINPASSWORD: secret
       ME_CONFIG_MONGODB_URL: mongodb://mongoadmin:secret@mongo:27017/
-  
+      
   fastapi:
     build:
       context: .

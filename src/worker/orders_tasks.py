@@ -19,7 +19,7 @@ MAX_TASK_RETRY = 0
     name='tasks.create_order',
     after_return=response_handler,
     autoretry_for=(BaseException,),
-    bind=True, default_retry_delay=10, max_retries=MAX_TASK_RETRY
+    bind=True, default_retry_delay=10, max_retries=2
 )
 def create_order_processor(task: callable, payload: dict) -> dict:
     """ Create order in DB
