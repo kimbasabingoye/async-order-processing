@@ -2,26 +2,28 @@
 
 cd $PROJECT_HOME/k8s
 
+NAME_SPACE=asyncop-project
+
 # Apply Kubernetes resources from the 'namespace/' directory
 kubectl apply -f namespace/
 
 # Apply Kubernetes resources from the 'code' directory
-kubectl apply -f code --namespace=asyncop-project
+kubectl apply -f code --namespace=$NAME_SPACE
 
 # Apply MongoDB resources
-kubectl apply -f mongo/ --namespace=asyncop-project
+kubectl apply -f mongo/ --namespace=$NAME_SPACE
 
 # Apply Redis resources
-kubectl apply -f redis/ --namespace=asyncop-project
+kubectl apply -f redis/ --namespace=$NAME_SPACE
 
 # Apply RabbitMQ resources
-kubectl apply -f rabbitmq/  --namespace=asyncop-project
+kubectl apply -f rabbitmq/  --namespace=$NAME_SPACE
 
 # Apply Celery resources
-kubectl apply -f celery/  --namespace=asyncop-project
+kubectl apply -f celery/  --namespace=$NAME_SPACE
 
 # Apply Nginx resources
-kubectl apply -f nginx/  --namespace=asyncop-project
+kubectl apply -f nginx/  --namespace=$NAME_SPACE
 
 # wait
 echo "Wait for deployment complete"
