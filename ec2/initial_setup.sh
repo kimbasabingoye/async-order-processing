@@ -4,6 +4,7 @@ echo "############ Install docker #############"
 # Add Docker's official GPG key:
 sudo apt-get update
 sudo apt-get install ca-certificates curl -y
+sudo apt-get install ca-certificates curl -y
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -35,6 +36,14 @@ echo 'alias k=kubectl' >>~/.bashrc
 
 source ~/.bashrc
 
+sudo apt-get install bash-completion -y
+
+kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
+
+echo 'alias k=kubectl' >>~/.bashrc
+
+source ~/.bashrc
+
 echo "############ End Install kubectl #############"
 
 
@@ -43,6 +52,8 @@ curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/miniku
   && chmod +x minikube
 sudo mkdir -p /usr/local/bin/
 sudo install minikube /usr/local/bin/
+minikube start
+
 minikube start
 
 echo "############ End Install minikube #############"
