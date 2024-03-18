@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asyncop-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: asyncop
+    version: {{.Chart.AppVersion}}
+data: 
+  VERSION: "1.6.2"
+  SERVICE_NAME: 'ProcessingService'
+  NAME: "Asynchronuous Order Processing"
+  LOG_LEVEL: "debug"

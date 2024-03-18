@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asyncop-app-depl
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: asyncop
+    version: {{.Chart.AppVersion}}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: asyncop
+  template:
+    metadata:
+      labels:
+        app: asyncop
+    spec:
+      containers:
+        - name: asyncop-app
+          image: sabingoyek/async-order-proc:1.0
+          envFrom:
+            - secretRef:
+                name: asyncop-secret
+            - configMapRef:
+                name: asyncop-config
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "0.5"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asyncop
+  namespace: asyncop-project
+spec:
+  selector:
+    app: asyncop
+  ports:
+    - port: 5000
+      targetPort: 5000
