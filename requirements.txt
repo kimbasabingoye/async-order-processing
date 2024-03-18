@@ -9,6 +9,13 @@ loguru
 pydantic
 pydantic-settings
 python-dotenv
+streamlit
+
+streamlit
+pandas
+altair
+plotly
+faker
 
 aio-pika
 # dev

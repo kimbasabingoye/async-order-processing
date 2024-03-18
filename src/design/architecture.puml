@@ -1,31 +1,35 @@
 @startuml
 
-' left to right direction
+' Set direction and skin parameters
 top to bottom direction
+skinparam agent {
+    BackgroundColor LightCoral
+}
+skinparam componentStyle uml2
+skinparam component {
+    BackgroundColor White
+    BorderColor Black
+}
 
-agent "\nDocker\n" as Docker
-agent "\nRabbitMQ\n" as RabbitMQ
-agent "\n       <B>Prism\n(mocked service)\n" as prism
-skinparam agentbackgroundColor LightCoral
-
-[Flower]
+' Define agents and components
+'agent "Docker" as Docker
+[RabbitMQ]
+[Redis]
 [FastAPI]
 [Uvicorn]
-[Gunicorn]
 [Celery\nworker] as Celery
-database "\nMongoDB\n" as DB #LightCoral
+database "MongoDB" as DB
+[Streamlit\nDashboard] as Streamlit
 
-
-Docker -[#blue]-> Flower
-Docker -[#blue]-> Gunicorn
-Gunicorn --> Uvicorn
+' Define connections
+'Docker -[#blue]-> Flower
+'Docker -[#blue]-> Gunicorn
 Celery <-> DB
-Docker -[#blue]-> Celery
-Celery .-> prism
-FastAPI .-> Flower
+'Docker -[#blue]-> Celery
 Celery <-> RabbitMQ
-Flower <-> RabbitMQ
+Celery <-> Redis
 Uvicorn --> FastAPI
 FastAPI <-> Celery
+Streamlit -[#blue]-> DB
 
 @enduml
